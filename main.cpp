@@ -1,6 +1,10 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
+#include <random>
+#include <algorithm>
+#include <queue>
 
 using namespace std;
 
@@ -18,6 +22,13 @@ public:
 	int getShape(){ return shape; }
 	int getShading(){ return shading; }
 	int getColor(){ return color; }
+	
+	bool operator==(const Card& other) const {
+        return (number == other.number &&
+                shape == other.shape &&
+                shading == other.shading &&
+                color == other.color);
+    }
 };
 
 Card::Card(int number, int shape, int shading, int color) {
@@ -66,23 +77,93 @@ Card findSet(Card a, Card b) {
 	return Card(number%3, shape%3, shading%3, color%3);
 }
 
-int main() {
-	Card deck[81];
-	int cnt = 0;
+int checkPlanet(Card a, Card b, Card c, Card d) {
+	if( findSet(a, b) == findSet(c, d) )
+		return 1;
+	if( findSet(a, c) == findSet(b, d) )
+		return 2;
+	if( findSet(a, d) == findSet(b, c) )
+		return 3;
+	return 0;
+}
+
+void play() {
+	
+	vector<Card> deck(81);
+	
 	for( int a=0; a<3; a++ )
 		for( int b=0; b<3; b++ )
 			for( int c=0; c<3; c++ )
-				for( int d=0; d<3; d++ ) {
-					deck[cnt] = Card(a, b, c, d);
-					// cout << deck[cnt].toString() << "\n";
-					++cnt;
-				}
-	int a, b;
-	while( cin >> a >> b ) {
-		Card aux = findSet(deck[a], deck[b]);
-		cout << deck[a].toString() << "\n";
-		cout << deck[b].toString() << "\n";
-		cout << aux.toString() << "\n";
+				for( int d=0; d<3; d++ )
+					deck.push_back(Card(a, b, c, d));
+	
+	// Initialize random number generator
+	random_device rd;
+	mt19937 g(rd());
+	
+	// Shuffle the vector
+	shuffle(deck.begin(), deck.end(), g);
+	
+	queue<Card> game;
+	for( int i=0; i<81; i++ ) {
+		game.push(deck[i]);
 	}
+	
+	while( !game.empty() ) {
+		;
+	}
+}
+
+int countPlanets(vector<Card> deck) {
+	int n = deck.size(), ans = 0;
+	
+	for( int i=0; i<n; i++ )
+		for( int j=i+1; j<n; j++ )
+			for( int k=j+1; k<n; k++ )
+				for( int l=k+1; l<n; l++ ) {
+					int aux = checkPlanet(deck[i], deck[j], deck[k], deck[l]);
+					if( aux ) {
+						/*cout << "Planet #" << ans+1 << ":\n";
+						cout << "Type: " << aux << "\n"; 
+						cout << deck[i].toString() << "\n" <<
+							deck[j].toString() << "\n" <<
+							deck[k].toString() << "\n" <<
+							deck[l].toString() << "\n\n";*/
+						++ans;
+					}
+				}
+	
+	return ans;
+}
+
+int main() {
+	cout << "\n";
+	
+	vector<Card> deck;
+	
+	for( int a=0; a<3; a++ )
+		for( int b=0; b<3; b++ )
+			for( int c=0; c<3; c++ )
+				for( int d=0; d<3; d++ )
+					deck.push_back(Card(a, b, c, d));
+	
+	// Initialize random number generator
+	random_device rd;
+	mt19937 g(rd());
+	
+	int iterations = 100, cardsDrawn = 12;
+	int sum = 0;
+	for( int i=0; i<iterations; i++ ) {
+		shuffle(deck.begin(), deck.end(), g);
+		
+		//vector<Card> vec(deck.begin(), deck.begin()+cardsDrawn);
+		// cout << "Cards in deck:\n"; for( Card x:deck ) cout << x.toString() << "\n"; cout << "\n";
+		//cout << "Cards drawn:\n"; for( Card x: vec ) { cout << x.toString() << "\n"; } cout << "\n";
+		
+		int aux = countPlanets(vector<Card>(deck.begin(), deck.begin()+cardsDrawn));
+		cout << aux << " planets found \n";
+		sum+=aux;
+	}
+	cout << "In average, " << (float)sum/(float)iterations << " planets were found in 12 cards\n";
 	return 0;
 }
